@@ -1,0 +1,1 @@
+-IC:\Users\olegp\Documents\Arduino\libraries\Watchy\src

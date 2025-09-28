@@ -1,7 +1,0 @@
-menu "RTC Configuration"
-
-config RTC_ENABLED
-    bool "Enable RTC driver"
-    default y
-
-endmenu
