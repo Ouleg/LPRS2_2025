@@ -1202,8 +1202,8 @@ void Watchy::taskTimes() {
     bool mn = rd(MENU_BTN_PIN);
     bool bk = rd(BACK_BTN_PIN);
 
-    bool eUp = up && !pUp;
-    bool eDn = dn && !pDn;
+    bool eUp = up && !pUp; // UP pressed now
+    bool eDn = dn && !pDn; // DOWN pressed now
     bool eMn = mn && !pMn; // MENU pressed now
     bool eBk = bk && !pBk; // BACK pressed now
     bool rMnReleased = !mn && pMn; // MENU released edge
@@ -1449,16 +1449,16 @@ void Watchy::taskTimes() {
 }
 
 
-// --- helper task for syncServer handling (top-level, place near globals) ---
+// --- helper task for syncServer handling ---
 static TaskHandle_t syncServerTaskHandle = NULL;
 static WebServer* gSyncServerPtr = nullptr;
 
-static void syncServerTask(void *pvParameters) {
+static void syncServerTask(void *pvParameters) { // prosledjuje se pokazivac na vec kreirani web server 
   WebServer *srv = (WebServer*)pvParameters;
   if (!srv) vTaskDelete(NULL);
   for (;;) {
     srv->handleClient();
-    vTaskDelay(pdMS_TO_TICKS(40)); // 25Hz poll
+    vTaskDelay(pdMS_TO_TICKS(40)); // 40ms ~ 25Hz poll
   }
 }
 
@@ -1535,9 +1535,9 @@ void Watchy::startSyncAP(){
   WiFiManager wifiManager;
   wifiManager.setTimeout(0); // 0 -> keep portal until user connects / cancels (no auto timeout)
 
-  // [ADDED] omogućimo neblokirajući portal i pripremimo BACK pin
-  wifiManager.setConfigPortalBlocking(false);       // [ADDED]
-  pinMode(BACK_BTN_PIN, INPUT_PULLUP);              // [ADDED]
+  // omogućimo neblokirajući portal i pripremimo BACK pin
+  wifiManager.setConfigPortalBlocking(false);       
+  pinMode(BACK_BTN_PIN, INPUT_PULLUP);              
 
   Serial.print("DEBUG: starting WiFiManager startConfigPortal with SSID: ");
   Serial.println(apSSID);
@@ -1546,18 +1546,18 @@ void Watchy::startSyncAP(){
   bool ok = wifiManager.startConfigPortal(apSSID, apPwd);
   Serial.printf("DEBUG: startConfigPortal returned=%d\n", ok ? 1 : 0);
 
-  // [ADDED] drži portal aktivnim i izađi kada je BACK pritisnut
-  while (wifiManager.getConfigPortalActive()) {     // [ADDED]
-    wifiManager.process();                          // [ADDED]
-    if (digitalRead(BACK_BTN_PIN) == ACTIVE_LOW) {  // [ADDED]
-      delay(25);                                    // [ADDED] debounce
-      if (digitalRead(BACK_BTN_PIN) == ACTIVE_LOW){ // [ADDED]
-        wifiManager.stopConfigPortal();             // [ADDED]
-        break;                                      // [ADDED]
-      }                                             // [ADDED]
-    }                                               // [ADDED]
-    delay(30);                                      // [ADDED]
-  }                                                 // [ADDED]
+  // drži portal aktivnim i izađi kada je BACK pritisnut
+  while (wifiManager.getConfigPortalActive()) {     
+    wifiManager.process();                          
+    if (digitalRead(BACK_BTN_PIN) == ACTIVE_LOW) {  
+      delay(25);                                    
+      if (digitalRead(BACK_BTN_PIN) == ACTIVE_LOW){ 
+        wifiManager.stopConfigPortal();             
+        break;                                      
+      }                                             
+    }                                               
+    delay(30);                                      
+  }                                                 
 
   // At this point portal ended (user may have configured WiFi) -> we should stop server & AP
   Serial.println("DEBUG: Exiting Sync AP mode - cleaning up");
